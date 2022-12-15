@@ -1,6 +1,6 @@
 import { Document, Model, Schema } from 'mongoose';
 
-import { IModels } from './';
+import { IModels } from '.';
 import { field } from './definitions/utils';
 
 export interface IConfig {

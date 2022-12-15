@@ -1,3 +1,5 @@
+import { isEnabled } from '@erxes/ui/src/utils/core';
+
 const zaloGetConfigs = `
   query zaloGetConfigs {
     zaloGetConfigs
@@ -19,6 +21,16 @@ const accounts = `
   }
 `;
 
+const user = `user {
+  _id
+  username
+  details {
+    avatar
+    fullName
+    position
+  }
+}`;
+
 const zaloConversationMessages = `
   query zaloConversationMessages(
     $conversationId: String!
@@ -39,7 +51,49 @@ const zaloConversationMessages = `
       userId
       createdAt
       isCustomerRead
-      attachments
+      attachments {
+        payload {
+          id
+          thumbnail
+          url
+          title
+          description
+          coordinates
+        }
+        type
+      }
+      user {
+        _id
+        username
+        details {
+          avatar
+          fullName
+          position
+        }
+      }
+      ${
+        isEnabled('contacts')
+          ? `
+          customer {
+            _id
+            avatar
+            firstName
+            middleName
+            lastName
+            primaryEmail
+            primaryPhone
+            state
+            companies {
+              _id
+              primaryName
+              website
+            }
+            customFieldsData
+            tagIds
+          }
+        `
+          : ``
+      }
     }
   }
 `;

@@ -1,31 +1,31 @@
-import { generateModels } from "../../models";
-import { removeIntegration, zaloCreateIntegration } from "../controllers";
+import { generateModels } from '../../models';
+import { removeIntegration, zaloCreateIntegration } from '../controllers';
 
-export const intergrationBroker = (consumeRPCQueue) => {
-    consumeRPCQueue(
-        "zalo:createIntegration",
-        async ({ subdomain, data: { doc, kind } }) => {
-            const models = await generateModels(subdomain);
+export const integrationBroker = ({ consumeRPCQueue }) => {
+  consumeRPCQueue(
+    'zalo:createIntegration',
+    async ({ subdomain, data: { doc, kind } }) => {
+      const models = await generateModels(subdomain);
 
-            if (kind === "zalo") {
-                return zaloCreateIntegration(models, subdomain, doc);
-            }
+      if (kind === 'zalo') {
+        return zaloCreateIntegration(models, subdomain, doc);
+      }
 
-            return {
-                status: "error",
-                data: "Wrong kind",
-            };
-        }
-    );
+      return {
+        status: 'error',
+        data: 'Wrong kind'
+      };
+    }
+  );
 
-    consumeRPCQueue(
-        "zalo:removeIntegration",
-        async ({ subdomain, data: { integrationId } }) => {
-            const models = await generateModels(subdomain);
-            await removeIntegration(models, integrationId);
-            return {
-                status: "success",
-            };
-        }
-    );
+  consumeRPCQueue(
+    'zalo:removeIntegration',
+    async ({ subdomain, data: { integrationId } }) => {
+      const models = await generateModels(subdomain);
+      await removeIntegration(models, integrationId);
+      return {
+        status: 'success'
+      };
+    }
+  );
 };

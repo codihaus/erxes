@@ -1,15 +1,15 @@
-import * as dotenv from "dotenv";
-import * as requestify from "requestify";
-import { debugExternalApi } from "@erxes/api-utils/src/debuggers";
-import { IRequestParams } from "@erxes/api-utils/src/requests";
+import * as dotenv from 'dotenv';
+import * as requestify from 'requestify';
+import { debugExternalApi } from '@erxes/api-utils/src/debuggers';
+import { IRequestParams } from '@erxes/api-utils/src/requests';
 
 dotenv.config();
 
 export const sendRequest = async (
-    { url, method, headers, form, body, params }: IRequestParams,
-    errorMessage?: string
+  { url, method, headers, form, body, params }: IRequestParams,
+  errorMessage?: string
 ) => {
-    debugExternalApi(`
+  debugExternalApi(`
       Sending request to
       url: ${url}
       method: ${method}
@@ -17,66 +17,77 @@ export const sendRequest = async (
       params: ${JSON.stringify(params)}
     `);
 
-    try {
-        const response = await requestify.request(url, {
-            method,
-            headers: { "Content-Type": "application/json", ...(headers || {}) },
-            form,
-            body,
-            params,
-        });
+  try {
+    const response = await requestify.request(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...(headers || {}) },
+      form,
+      body,
+      params
+    });
 
-        const responseBody = response.getBody();
+    const responseBody = response.getBody();
 
-        debugExternalApi(`
+    debugExternalApi(`
         Success from : ${url}
         responseBody: ${JSON.stringify(responseBody)}
       `);
 
-        return responseBody;
-    } catch (e) {
-        if (e.code === "ECONNREFUSED" || e.code === "ENOTFOUND") {
-            throw new Error(errorMessage);
-        } else {
-            const message = e.body || e.message;
-            throw new Error(message);
-        }
+    return responseBody;
+  } catch (e) {
+    if (e.code === 'ECONNREFUSED' || e.code === 'ENOTFOUND') {
+      throw new Error(errorMessage);
+    } else {
+      const message = e.body || e.message;
+      throw new Error(message);
     }
+  }
 };
 
-export const isOASend = (eventName: string = "") => {
-    return eventName.startsWith('oa')
+export const isOASend = (eventName: string = '') => {
+  return (
+    eventName.startsWith('oa') ||
+    eventName.startsWith('user_received') ||
+    eventName.startsWith('user_seen')
+  );
 };
 
 export interface ZaloMessage {
-    event_name?: string,
-    app_id?: string,
-    message?: {
-        msg_id: string,
-        text: string
-        attachments?: {
-            type: string
-            payload: {
-                thumbnail?: string
-                url?: string
-                id?: string
-            }
-        }[]
-    },
-    recipient: {
-        id: string
-    },
-    sender: {
-        id: string
-    },
-    timestamp?: string
-
+  event_name?: string;
+  app_id?: string;
+  message?: {
+    msg_id: string;
+    text: string;
+    attachments?: {
+      type: string;
+      payload: {
+        thumbnail?: string;
+        url?: string;
+        id?: string;
+      };
+    }[];
+  };
+  recipient: {
+    id: string;
+  };
+  sender: {
+    id: string;
+  };
+  timestamp?: string;
 }
 
-export const getMessageOAID = ({event_name, recipient, sender}: ZaloMessage) => {
-    return isOASend(event_name) ? sender.id : recipient.id
+export const getMessageOAID = ({
+  event_name,
+  recipient,
+  sender
+}: ZaloMessage) => {
+  return isOASend(event_name) ? sender.id : recipient.id;
 };
 
-export const getMessageUserID = ({event_name, recipient, sender}: ZaloMessage) => {
-    return isOASend(event_name) ? recipient.id : sender.id
+export const getMessageUserID = ({
+  event_name,
+  recipient,
+  sender
+}: ZaloMessage) => {
+  return isOASend(event_name) ? recipient.id : sender.id;
 };

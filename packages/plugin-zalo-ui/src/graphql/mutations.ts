@@ -5,8 +5,8 @@ const zaloUpdateConfigs = `
 `;
 
 const removeAccount = `
-  mutation zaloAccountRemove($_id: String!) {
-    zaloAccountRemove(_id: $_id)
+  mutation zaloRemoveAccount($_id: String!) {
+    zaloRemoveAccount(_id: $_id)
   }
 `;
 

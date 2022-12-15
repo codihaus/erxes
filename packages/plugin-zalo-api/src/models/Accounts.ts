@@ -1,6 +1,6 @@
 import { Document, Model, Schema } from 'mongoose';
 
-import { IModels } from './';
+import { IModels } from '.';
 import { field } from './definitions/utils';
 
 export interface IAccount {
@@ -38,7 +38,7 @@ export const accountSchema = new Schema({
   },
   name: { type: String },
   oa_id: { type: String },
-  avatar: { type: String },
+  avatar: { type: String }
 });
 
 export interface IAccountModel extends Model<IAccountDocument> {

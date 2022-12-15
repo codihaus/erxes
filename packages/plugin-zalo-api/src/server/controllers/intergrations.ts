@@ -1,200 +1,198 @@
-import { debug } from "../../configs";
-import { IModels } from "../../models";
-import { zaloGet } from "../../zalo";
-import { createOrUpdateConversation } from "./conversations";
-import { createOrUpdateCustomer } from "./customers";
-const querystring = require("querystring");
+import { debug } from '../../configs';
+import { IModels } from '../../models';
+import { zaloGet } from '../../zalo';
+import { createOrUpdateConversation } from './conversations';
+import { createOrUpdateCustomer } from './customers';
+const querystring = require('querystring');
 
 export const zaloCreateIntegration = async (
-    models: IModels,
-    subdomain: any,
-    { accountId, integrationId, data, kind }
+  models: IModels,
+  subdomain: any,
+  { accountId, integrationId, data, kind }
 ) => {
-    const account = await models.Accounts.getAccount({ _id: accountId });
-    const oa_id = account?.oa_id;
-    let integration;
-    try {
-        integration = await models.Integrations.create({
-            kind,
-            accountId,
-            erxesApiId: integrationId,
-            oa_id,
-        });
-    } catch (e) {
-        // debug.error(
-        //     `zaloCreateIntegration: Failed to create Integrations: ${e.message}`
-        // );
-    }
+  const account = await models.Accounts.getAccount({ _id: accountId });
+  const oa_id = account?.oa_id;
+  let integration;
+  try {
+    integration = await models.Integrations.create({
+      kind,
+      accountId,
+      erxesApiId: integrationId,
+      oa_id
+    });
+  } catch (e) {
+    // debug.error(
+    //     `zaloCreateIntegration: Failed to create Integrations: ${e.message}`
+    // );
+  }
 
-    const recentMessages = await zaloGet(
-        `listrecentchat?data={"offset":0,"count":10}`,
-        { models, oa_id }
-    );
+  const recentMessages = await zaloGet(
+    `listrecentchat?data={"offset":0,"count":10}`,
+    { models, oa_id }
+  );
 
-    debug.error(
-        `recentMessages: ${querystring.stringify(recentMessages)}`
-    );
+  debug.error(`recentMessages: ${querystring.stringify(recentMessages)}`);
 
-    if (recentMessages.error === 0) {
-        recentMessages?.data?.map(async (recentMessage: any) => {
-            let {
-                src,
-                time,
-                type,
-                message_id,
-                from_id,
-                to_id,
-                from_display_name,
-                to_display_name,
-                from_avatar,
-                to_avatar,
-                message,
+  if (recentMessages.error === 0) {
+    recentMessages?.data?.map(async (recentMessage: any) => {
+      let {
+        src,
+        time,
+        type,
+        message_id,
+        from_id,
+        to_id,
+        from_display_name,
+        to_display_name,
+        from_avatar,
+        to_avatar,
+        message,
+        url,
+        thumb,
+        location
+      } = recentMessage;
+
+      const userId = src ? from_id : to_id;
+      const firstName = src ? from_display_name : to_display_name;
+      const avatar = src ? from_avatar : to_avatar;
+      type = type === 'photo' ? 'image' : type.toLowerCase();
+
+      const customer = await createOrUpdateCustomer(models, subdomain, {
+        userId,
+        firstName,
+        integrationId,
+        avatar
+      });
+
+      await createOrUpdateConversation(models, subdomain, {
+        integrationId: integration._id,
+        userId,
+        oa_id,
+        customerId: customer?.erxesApiId,
+        integrationErxesApiId: integrationId,
+        message: {
+          timestamp: time,
+          text: message,
+          msg_id: message_id,
+          attachments: [
+            {
+              payload: {
+                id: '',
+                thumbnail: thumb,
                 url,
-                thumb,
-                location,
-            } = recentMessage;
+                coordinates: location
+              },
+              type // text, image, sticker, GIF, location, voice, link, links,
+            }
+          ]
+        }
+      });
+    });
+  }
 
-            const userId = src ? from_id : to_id;
-            const firstName = src ? from_display_name : to_display_name;
-            const avatar = src ? from_avatar : to_avatar;
-            type = type === "photo" ? "image" : type.toLowerCase();
+  //   const oaTokensMap: { [key: string]: string } = {};
 
-            const customer = await createOrUpdateCustomer(models, subdomain, {
-                userId,
-                firstName,
-                integrationId,
-                avatar,
-            });
+  //   for (const pageId of oa_id) {
+  //       try {
+  //           const pageAccessToken = await getPageAccessToken(
+  //               pageId,
+  //               account.token
+  //           );
 
-            await createOrUpdateConversation(models, subdomain, {
-                integrationId: integration._id,
-                userId,
-                oa_id,
-                customerId: customer.erxesApiId,
-                integrationErxesApiId: integrationId,
-                message: {
-                    timestamp: time,
-                    text: message,
-                    msg_id: message_id,
-                    attachments: [
-                        {
-                            payload: {
-                                id: "",
-                                thumbnail: thumb,
-                                url,
-                                coordinates: location,
-                            },
-                            type, // text, image, sticker, GIF, location, voice, link, links,
-                        },
-                    ],
-                },
-            });
-        });
-    }
+  //           oaTokensMap[pageId] = pageAccessToken;
 
-    //   const oaTokensMap: { [key: string]: string } = {};
+  //           try {
+  //               // await subscribePage(pageId, pageAccessToken);
+  //               // debugFacebook(`Successfully subscribed page ${pageId}`);
+  //           } catch (e) {
+  //               // debugError(
+  //               //     `Error ocurred while trying to subscribe page ${e.message ||
+  //               //         e}`
+  //               // );
+  //               throw e;
+  //           }
+  //       } catch (e) {
+  //           // debugError(
+  //           //     `Error ocurred while trying to get page access token with ${e.message ||
+  //           //         e}`
+  //           // );
 
-    //   for (const pageId of oa_id) {
-    //       try {
-    //           const pageAccessToken = await getPageAccessToken(
-    //               pageId,
-    //               account.token
-    //           );
+  //           throw e;
+  //       }
+  //   }
 
-    //           oaTokensMap[pageId] = pageAccessToken;
+  // integration.facebookPageTokensMap = facebookPageTokensMap;
 
-    //           try {
-    //               // await subscribePage(pageId, pageAccessToken);
-    //               // debugFacebook(`Successfully subscribed page ${pageId}`);
-    //           } catch (e) {
-    //               // debugError(
-    //               //     `Error ocurred while trying to subscribe page ${e.message ||
-    //               //         e}`
-    //               // );
-    //               throw e;
-    //           }
-    //       } catch (e) {
-    //           // debugError(
-    //           //     `Error ocurred while trying to get page access token with ${e.message ||
-    //           //         e}`
-    //           // );
+  //   await integration.save();
 
-    //           throw e;
-    //       }
-    //   }
-
-    // integration.facebookPageTokensMap = facebookPageTokensMap;
-
-    //   await integration.save();
-
-    return { status: "success" };
+  return { status: 'success' };
 };
 
 export const removeIntegration = async (
-    models: IModels,
-    integrationErxesApiId: string
+  models: IModels,
+  integrationErxesApiId: string
 ): Promise<string> => {
-    const integration = await models.Integrations.findOne({
-        erxesApiId: integrationErxesApiId,
-    });
+  const integration = await models.Integrations.findOne({
+    erxesApiId: integrationErxesApiId
+  });
 
-    if (!integration) {
-        throw new Error("Integration not found");
+  if (!integration) {
+    throw new Error('Integration not found');
+  }
+
+  const { _id, kind, accountId, erxesApiId } = integration;
+
+  const account = await models.Accounts.findOne({ _id: accountId });
+
+  const selector = { integrationId: _id };
+
+  if (kind.includes('zalo')) {
+    //   debugFacebook('Removing entries');
+
+    if (!account) {
+      throw new Error('Account not found');
     }
 
-    const { _id, kind, accountId, erxesApiId } = integration;
+    //   for (const pageId of integration.oa_id || []) {
+    // let pageTokenResponse;
 
-    const account = await models.Accounts.findOne({ _id: accountId });
+    // try {
+    //   pageTokenResponse = await getPageAccessToken(pageId, account.token);
+    // } catch (e) {
+    //   debugError(
+    //     `Error ocurred while trying to get page access token with ${e.message}`
+    //   );
+    // }
 
-    const selector = { integrationId: _id };
+    // await models.Posts.deleteMany({ recipientId: pageId });
+    // await models.Comments.deleteMany({ recipientId: pageId });
 
-    if (kind.includes("zalo")) {
-        //   debugFacebook('Removing entries');
+    // try {
+    //   await unsubscribePage(pageId, pageTokenResponse);
+    // } catch (e) {
+    //   debugError(
+    //     `Error occured while trying to unsubscribe page pageId: ${pageId}`
+    //   );
+    // }
+    //   }
 
-        if (!account) {
-            throw new Error("Account not found");
-        }
+    //   const conversationIds = await models.Conversations.find(selector).distinct(
+    //     '_id'
+    //   );
 
-        //   for (const pageId of integration.oa_id || []) {
-        // let pageTokenResponse;
+    //   await models.Customers.deleteMany({
+    //     integrationId: integrationErxesApiId
+    //   });
 
-        // try {
-        //   pageTokenResponse = await getPageAccessToken(pageId, account.token);
-        // } catch (e) {
-        //   debugError(
-        //     `Error ocurred while trying to get page access token with ${e.message}`
-        //   );
-        // }
-
-        // await models.Posts.deleteMany({ recipientId: pageId });
-        // await models.Comments.deleteMany({ recipientId: pageId });
-
-        // try {
-        //   await unsubscribePage(pageId, pageTokenResponse);
-        // } catch (e) {
-        //   debugError(
-        //     `Error occured while trying to unsubscribe page pageId: ${pageId}`
-        //   );
-        // }
-        //   }
-
-        //   const conversationIds = await models.Conversations.find(selector).distinct(
-        //     '_id'
-        //   );
-
-        //   await models.Customers.deleteMany({
-        //     integrationId: integrationErxesApiId
-        //   });
-
-        //   await models.Conversations.deleteMany(selector);
-        //   await models.ConversationMessages.deleteMany({
-        //     conversationId: { $in: conversationIds }
-        //   });
-
-        await models.Integrations.deleteOne({ _id });
-    }
+    //   await models.Conversations.deleteMany(selector);
+    //   await models.ConversationMessages.deleteMany({
+    //     conversationId: { $in: conversationIds }
+    //   });
 
     await models.Integrations.deleteOne({ _id });
+  }
 
-    return erxesApiId;
+  await models.Integrations.deleteOne({ _id });
+
+  return erxesApiId;
 };

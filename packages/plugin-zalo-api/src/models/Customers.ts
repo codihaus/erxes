@@ -1,52 +1,52 @@
-import { Document, Model, Schema } from "mongoose";
+import { Document, Model, Schema } from 'mongoose';
 
-import { IModels } from "./";
-import { field } from "./definitions/utils";
+import { IModels } from '.';
+import { field } from './definitions/utils';
 
 export interface ICustomer {
-    userId: string;
-    // id on erxes-api
-    erxesApiId?: string;
-    firstName: string;
-    lastName: string;
-    avatar: string;
-    integrationId: string;
+  userId: string;
+  // id on erxes-api
+  erxesApiId?: string;
+  firstName: string;
+  lastName: string;
+  profilePic: string;
+  integrationId: string;
 }
 
 export interface ICustomerDocument extends ICustomer, Document {}
 
 export const customerSchema = new Schema({
-    _id: field({ pkey: true }),
-    userId: { type: String, unique: true },
-    erxesApiId: String,
-    firstName: String,
-    lastName: String,
-    avatar: String,
-    integrationId: String,
+  _id: field({ pkey: true }),
+  userId: { type: String, unique: true },
+  erxesApiId: String,
+  firstName: String,
+  lastName: String,
+  profilePic: String,
+  integrationId: String
 });
 
 export interface ICustomerModel extends Model<ICustomerDocument> {
-    getCustomer(selector: any, isLean?: boolean): Promise<ICustomerDocument>;
+  getCustomer(selector: any, isLean?: boolean): Promise<ICustomerDocument>;
 }
 
 export const loadCustomerClass = (models: IModels) => {
-    class Customer {
-        public static async getCustomer(selector: any, isLean: boolean) {
-            let customer = await models.Customers.findOne(selector);
+  class Customer {
+    public static async getCustomer(selector: any, isLean: boolean) {
+      let customer = await models.Customers.findOne(selector);
 
-            if (isLean) {
-                customer = await models.Customers.findOne(selector).lean();
-            }
+      if (isLean) {
+        customer = await models.Customers.findOne(selector).lean();
+      }
 
-            if (!customer) {
-                throw new Error("Customer not found");
-            }
+      if (!customer) {
+        throw new Error('Customer not found');
+      }
 
-            return customer;
-        }
+      return customer;
     }
+  }
 
-    customerSchema.loadClass(Customer);
+  customerSchema.loadClass(Customer);
 
-    return customerSchema;
+  return customerSchema;
 };

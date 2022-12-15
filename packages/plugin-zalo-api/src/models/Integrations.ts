@@ -1,6 +1,6 @@
 import { Document, Model, Schema } from 'mongoose';
 
-import { IModels } from './';
+import { IModels } from '.';
 import { field } from './definitions/utils';
 import { debug } from '../configs';
 
@@ -44,7 +44,9 @@ export const loadIntegrationClass = (models: IModels) => {
       const integration = await models.Integrations.findOne(selector);
 
       if (!integration) {
-        debug.error(`Integration not found ${JSON.stringify({integration, selector})}`);
+        debug.error(
+          `Integration not found ${JSON.stringify({ integration, selector })}`
+        );
       }
 
       return integration;

@@ -1,18 +1,39 @@
-import { intergrationBroker } from './intergration'
-
+import {
+  ISendMessageArgs,
+  sendMessage as sendCommonMessage
+} from '@erxes/api-utils/src/core';
+import { serviceDiscovery } from '../../configs';
+import { integrationBroker } from './intergration';
+import { conversationMessagesBroker } from './conversationMessages';
 
 let client;
 
 export const initBroker = async cl => {
-    client = cl;
-    
-    const { consumeRPCQueue } = client;
-    
-    intergrationBroker(consumeRPCQueue)
-}
+  client = cl;
+
+  integrationBroker(cl);
+  conversationMessagesBroker(cl);
+};
 
 export default function() {
-    return client;
+  return client;
 }
 
-export * from './sendMessage'
+export const sendContactsMessage = (args: ISendMessageArgs) => {
+  return sendCommonMessage({
+    client,
+    serviceDiscovery,
+    serviceName: 'contacts',
+    ...args
+  });
+};
+
+export const sendInboxMessage = (args: ISendMessageArgs) => {
+  return sendCommonMessage({
+    client,
+    serviceDiscovery,
+    serviceName: 'inbox',
+    // timeout: 50000,
+    ...args
+  });
+};

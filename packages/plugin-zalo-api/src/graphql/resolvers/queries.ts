@@ -1,7 +1,7 @@
 import { IContext, IModels } from '../../models';
 import { IConversationMessageDocument } from '../../models/ConversationMessages';
 // import { Accounts, Messages } from '../../models';
-import { debug } from '../../configs'
+import { debug } from '../../configs';
 
 interface IKind {
   kind: string;
@@ -74,8 +74,8 @@ const queries = {
       .sort({ createdAt: -1 })
       .limit(50);
 
-    debug.error(`ConversationMessages query: ${JSON.stringify(query)}`)
-    debug.error(`ConversationMessages: ${JSON.stringify(messages)}`)
+    // debug.error(`ConversationMessages query: ${JSON.stringify(query)}`)
+    // debug.error(`ConversationMessages: ${JSON.stringify(messages)}`)
 
     return messages.reverse();
   },
@@ -91,7 +91,7 @@ const queries = {
     const selector = await buildSelector(conversationId, models);
 
     return models.ConversationMessages.countDocuments(selector);
-  },
+  }
 
   // async zaloConversationDetail(
   //   _root,
