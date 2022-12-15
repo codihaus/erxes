@@ -265,30 +265,9 @@ export const mutations = `
   integrationsEditCommonFields(_id: String!, name: String!, brandId: String!, channelIds: [String], data: JSON): Integration
 
   integrationsRemove(_id: String!): JSON
-  integrationsRemoveAccount(_id: String!): JSON
+  integrationsRemoveAccount(_id: String!, kind: String): JSON
 
   integrationsArchive(_id: String!, status: Boolean!): Integration
-
-  integrationSendMail(
-    erxesApiId: String!
-    subject: String!
-    body: String
-    to: [String]!
-    cc: [String]
-    bcc: [String]
-    from: String!
-    shouldResolve: Boolean
-    headerId: String
-    replyTo: [String]
-    inReplyTo: String
-    threadId: String
-    messageId: String
-    replyToMessageId: String
-    kind: String
-    references: [String]
-    attachments: [JSON]
-    customerId: String
-  ): JSON
 
   integrationsSendSms(integrationId: String!, content: String!, to: String!): JSON
 

@@ -2,17 +2,18 @@ import {
   AccountBox,
   AccountItem,
   AccountTitle,
-  FacebookButton,
   GoogleButton
-} from '../styles';
-import { IAccount, IntegrationTypes } from '../types';
+} from '@erxes/ui-inbox/src/settings/integrations/styles';
+import {
+  IAccount,
+  IntegrationTypes
+} from '@erxes/ui-inbox/src/settings/integrations/types';
 import { __, confirm } from 'coreui/utils';
 
 import Button from '@erxes/ui/src/components/Button';
 import { CenterText } from '@erxes/ui-log/src/activityLogs/styles';
 import EmptyState from '@erxes/ui/src/components/EmptyState';
 import { IFormProps } from '@erxes/ui/src/types';
-import Icon from '@erxes/ui/src/components/Icon';
 import React from 'react';
 
 type Props = {
@@ -60,15 +61,6 @@ class Accounts extends React.Component<Props, { accountId?: string }> {
 
     if (kind === 'gmail' || kind === 'nylas-gmail') {
       return <GoogleButton href="#add" onClick={onAdd} />;
-    }
-
-    if (kind === 'facebook') {
-      return (
-        <FacebookButton onClick={onAdd}>
-          <Icon icon="facebook-official" />
-          {__('Continue with Facebook')}
-        </FacebookButton>
-      );
     }
 
     return (

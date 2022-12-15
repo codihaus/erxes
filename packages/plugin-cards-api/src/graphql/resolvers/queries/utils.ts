@@ -12,6 +12,7 @@ import {
   fetchSegment,
   sendContactsMessage,
   sendCoreMessage,
+  sendFormsMessage,
   sendNotificationsMessage,
   sendSegmentsMessage
 } from '../../../messageBroker';
@@ -135,6 +136,7 @@ export const generateCommonFilters = async (
   const {
     _ids,
     pipelineId,
+    pipelineIds,
     stageId,
     search,
     closeDateType,
@@ -150,7 +152,9 @@ export const generateCommonFilters = async (
     labelIds,
     priority,
     userIds,
+    tagIds,
     segment,
+    segmentData,
     assignedToMe,
     startDate,
     endDate,
@@ -294,9 +298,15 @@ export const generateCommonFilters = async (
 
   if (stageId) {
     filter.stageId = stageId;
-  } else if (pipelineId) {
+  } else if (pipelineId || pipelineIds) {
+    let filterPipeline = pipelineId;
+
+    if (pipelineIds) {
+      filterPipeline = { $in: pipelineIds };
+    }
+
     const stageIds = await models.Stages.find({
-      pipelineId,
+      pipelineId: filterPipeline,
       status: { $ne: BOARD_STATUSES.ARCHIVED }
     }).distinct('_id');
 
@@ -311,6 +321,10 @@ export const generateCommonFilters = async (
 
   if (priority) {
     filter.priority = contains(priority);
+  }
+
+  if (tagIds) {
+    filter.tagIds = { $in: tagIds };
   }
 
   if (pipelineId) {
@@ -360,6 +374,12 @@ export const generateCommonFilters = async (
 
   if (assignedToMe) {
     filter.assignedUserIds = { $in: [currentUserId] };
+  }
+
+  if (segmentData) {
+    const segment = JSON.parse(segmentData);
+    const itemIds = await fetchSegment(subdomain, '', {}, segment);
+    filter._id = { $in: itemIds };
   }
 
   if (segment) {
@@ -758,6 +778,7 @@ export const getItemList = async (
         watchedUserIds: 1,
         customFieldsData: 1,
         stageChangedDate: 1,
+        tagIds: 1,
         ...(extraFields || {})
       }
     }
@@ -767,7 +788,15 @@ export const getItemList = async (
     pipelines.splice(3, 0, { $limit: limit });
   }
 
+  if (serverTiming) {
+    serverTiming.startTime('getItemsPipelineAggregate');
+  }
+
   const list = await collection.aggregate(pipelines);
+
+  if (serverTiming) {
+    serverTiming.endTime('getItemsPipelineAggregate');
+  }
 
   const ids = list.map(item => item._id);
 
@@ -951,7 +980,48 @@ export const getItemList = async (
     serverTiming.endTime('getItemsNotifications');
   }
 
+  if (serverTiming) {
+    serverTiming.startTime('getItemsFields');
+  }
+
+  const fields = await sendFormsMessage({
+    subdomain,
+    action: 'fields.find',
+    data: {
+      query: {
+        showInCard: true,
+        contentType: `cards:${type}`
+      }
+    },
+    isRPC: true,
+    defaultValue: []
+  });
+
+  if (serverTiming) {
+    serverTiming.endTime('getItemsFields');
+  }
+
   for (const item of list) {
+    if (
+      item.customFieldsData &&
+      item.customFieldsData.length > 0 &&
+      fields.length > 0
+    ) {
+      item.customProperties = [];
+
+      fields.forEach(field => {
+        const fieldData = item.customFieldsData.find(
+          f => f.field === field._id
+        );
+
+        if (fieldData) {
+          item.customProperties.push({
+            name: `${field.text} - ${fieldData.value}`
+          });
+        }
+      });
+    }
+
     const notification = notifications.find(n => n.contentTypeId === item._id);
 
     updatedList.push({

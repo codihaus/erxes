@@ -229,6 +229,7 @@ export interface ISendMessageArgs {
   action: string;
   data;
   isRPC?: boolean;
+  timeout?: number;
   defaultValue?;
 }
 
@@ -247,7 +248,8 @@ export const sendMessage = async (
     action,
     data,
     defaultValue,
-    isRPC
+    isRPC,
+    timeout
   } = args;
 
   if (serviceName) {
@@ -264,10 +266,19 @@ export const sendMessage = async (
     }
   }
 
-  return client[isRPC ? 'sendRPCMessage' : 'sendMessage'](
-    serviceName + (serviceName ? ':' : '') + action,
-    { subdomain, data, thirdService: data && data.thirdService }
-  );
+  const queueName = serviceName + (serviceName ? ':' : '') + action;
+
+  if (!client) {
+    throw new Error(`client not found during ${queueName}`);
+  }
+
+  return client[isRPC ? 'sendRPCMessage' : 'sendMessage'](queueName, {
+    subdomain,
+    data,
+    defaultValue,
+    timeout,
+    thirdService: data && data.thirdService
+  });
 };
 
 interface IActionMap {
@@ -338,15 +349,21 @@ export const createGenerateModels = <IModels>(models, loadClasses) => {
   };
 };
 
-export const authCookieOptions = (options = {}) => {
+export const authCookieOptions = (options: any = {}) => {
   const NODE_ENV = getEnv({ name: 'NODE_ENV' });
   const twoWeek = 14 * 24 * 3600 * 1000; // 14 days
+
+  const secure = !['test', 'development'].includes(NODE_ENV);
+
+  if (!secure && options.sameSite) {
+    delete options.sameSite;
+  }
 
   const cookieOptions = {
     httpOnly: true,
     expires: new Date(Date.now() + twoWeek),
     maxAge: twoWeek,
-    secure: !['test', 'development'].includes(NODE_ENV),
+    secure,
     ...options
   };
 

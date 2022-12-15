@@ -1,9 +1,9 @@
+import { queries } from '@erxes/ui-products/src/graphql';
 import { commonFields, commonListFields } from '../../boards/graphql/mutations';
 import {
   conformityQueryFieldDefs,
   conformityQueryFields
 } from '../../conformity/graphql/queries';
-import { isEnabled } from '@erxes/ui/src/utils/core';
 
 const commonParams = `
   $companyIds: [String],
@@ -20,9 +20,11 @@ const commonParams = `
   $sortDirection: Int,
   $userIds: [String],
   $segment: String,
+  $segmentData:String,
   $assignedToMe: String,
   $startDate: String,
   $endDate: String,
+  $tagIds: [String],
   ${conformityQueryFields}
 `;
 
@@ -41,9 +43,12 @@ const commonParamDefs = `
   sortDirection: $sortDirection,
   userIds: $userIds,
   segment: $segment,
+  segmentData: $segmentData,
   assignedToMe: $assignedToMe,
   startDate: $startDate,
   endDate: $endDate,
+  tagIds: $tagIds,
+  
   ${conformityQueryFieldDefs}
 `;
 
@@ -52,18 +57,6 @@ export const dealFields = `
   productsData
   paymentsData
   amount
-  ${
-    isEnabled('tags')
-      ? `
-  tags {
-    _id
-    name
-    colorCode
-  }
-  `
-      : ``
-  }
-  tagIds
 `;
 
 const dealsTotalAmounts = `
@@ -200,11 +193,14 @@ const checkDiscount = `
   }
 `;
 
+const productCategories = queries.productCategories;
+
 export default {
   deals,
   dealsTotalCount,
   dealDetail,
   productDetail,
+  productCategories,
   dealsTotalAmounts,
   archivedDeals,
   archivedDealsCount,

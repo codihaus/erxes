@@ -12,7 +12,7 @@ import {
   getItemList,
   IArchiveArgs
 } from './utils';
-import { IContext, models } from '../../../connectionResolver';
+import { IContext } from '../../../connectionResolver';
 import {
   sendCoreMessage,
   sendLoyaltiesMessage,
@@ -40,8 +40,6 @@ const dealQueries = {
       amount: await dealResolvers.amount(item)
     });
 
-    serverTiming.startTime('getItemsList');
-
     const deals = await getItemList(
       models,
       subdomain,
@@ -53,8 +51,6 @@ const dealQueries = {
       getExtraFields,
       serverTiming
     );
-
-    serverTiming.endTime('getItemsList');
 
     // @ts-ignore
     const dealProductIds = deals.flatMap(deal => {
@@ -247,7 +243,10 @@ const dealQueries = {
     {
       _id,
       products
-    }: { _id: string; products: { productId: string; quantity: number }[] },
+    }: {
+      _id: string;
+      products: Array<{ productId: string; quantity: number }>;
+    },
     { subdomain }: IContext
   ) {
     let ownerId = '';
@@ -297,7 +296,7 @@ const dealQueries = {
       data: {
         ownerType,
         ownerId,
-        products: products
+        products
       },
       isRPC: true
     });

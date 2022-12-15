@@ -63,6 +63,7 @@ const commonQueryParams = `
   _ids: [String]
   date: ItemDate
   pipelineId: String
+  pipelineIds: [String]
   customerIds: [String]
   companyIds: [String]
   assignedUserIds: [String]
@@ -75,6 +76,7 @@ const commonQueryParams = `
   sortDirection: Int
   userIds: [String]
   segment: String
+  segmentData: String
   assignedToMe: String
   startDate: String
   endDate: String
@@ -82,6 +84,7 @@ const commonQueryParams = `
   stageChangedStartDate: Date
   stageChangedEndDate: Date
   noSkipArchive: Boolean
+  tagIds: [String]
   `;
 
 const listQueryParams = `

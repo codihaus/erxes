@@ -4,7 +4,7 @@ import { FormControl } from '@erxes/ui/src/components/form';
 import FormGroup from '@erxes/ui/src/components/form/Group';
 import ControlLabel from '@erxes/ui/src/components/form/Label';
 import Info from '@erxes/ui/src/components/Info';
-import { __ } from '@erxes/ui/src/utils/core';
+import { loadDynamicComponent, __ } from '@erxes/ui/src/utils/core';
 import Wrapper from '@erxes/ui/src/layout/components/Wrapper';
 import React from 'react';
 import { ContentBox, Title } from '@erxes/ui-settings/src/styles';
@@ -49,17 +49,18 @@ class IntegrationConfigs extends React.Component<Props, State> {
     this.onChangeConfig(code, e.target.value);
   };
 
-  renderItem(
+  renderItem = (
     key: string,
     type?: string,
     description?: string,
-    defaultValue?: string
-  ) {
+    defaultValue?: string,
+    label?: string
+  ) => {
     const { configsMap } = this.state;
 
     return (
       <FormGroup>
-        <ControlLabel>{KEY_LABELS[key]}</ControlLabel>
+        <ControlLabel>{label || KEY_LABELS[key]}</ControlLabel>
         {description && <p>{__(description)}</p>}
         <FormControl
           type={type || 'text'}
@@ -68,34 +69,13 @@ class IntegrationConfigs extends React.Component<Props, State> {
         />
       </FormGroup>
     );
-  }
+  };
 
   renderContent = () => {
     const { configsMap } = this.state;
 
     return (
       <ContentBox id={'IntegrationSettingsMenu'}>
-        <CollapseContent title="Facebook">
-          <Info>
-            <a
-              target="_blank"
-              href="https://erxes.org/administrator/system-config#facebook"
-              rel="noopener noreferrer"
-            >
-              {__('Learn how to set Facebook Integration Variables')}
-            </a>
-          </Info>
-          {this.renderItem('FACEBOOK_APP_ID')}
-          {this.renderItem('FACEBOOK_APP_SECRET')}
-          {this.renderItem('FACEBOOK_VERIFY_TOKEN')}
-          {this.renderItem(
-            'FACEBOOK_PERMISSIONS',
-            '',
-            '',
-            'pages_messaging,pages_manage_ads,pages_manage_engagement,pages_manage_metadata,pages_read_user_content'
-          )}
-        </CollapseContent>
-
         <CollapseContent title="Twitter">
           <Info>
             <a
@@ -200,6 +180,14 @@ class IntegrationConfigs extends React.Component<Props, State> {
         <CollapseContent title="Telnyx SMS">
           {this.renderItem('TELNYX_API_KEY')}
         </CollapseContent>
+
+        {loadDynamicComponent(
+          'inboxIntegrationSettings',
+          {
+            renderItem: this.renderItem
+          },
+          true
+        )}
       </ContentBox>
     );
   };
@@ -213,24 +201,25 @@ class IntegrationConfigs extends React.Component<Props, State> {
 
     const breadcrumb = [
       { title: __('Settings'), link: '/settings' },
-      { title: __('Add-ons config') }
+      { title: __('Integrations config') }
     ];
 
     return (
       <Wrapper
         header={
           <Wrapper.Header
-            title={__('Add-ons config')}
+            title={__('Integrations config')}
             breadcrumb={breadcrumb}
           />
         }
         actionBar={
           <Wrapper.ActionBar
-            left={<Title>{__('Add-ons config')}</Title>}
+            left={<Title>{__('Integrations config')}</Title>}
             right={actionButtons}
           />
         }
         content={this.renderContent()}
+        hasBorder={true}
       />
     );
   }
