@@ -153,7 +153,7 @@ export const receiveMessage = async req => {
     return;
   }
 
-  // debug.error(`integration: ${JSON.stringify(integration)}`);
+  debug.error(`integration: ${JSON.stringify(integration)}`);
 
   const customer = await createOrUpdateCustomer(models, subdomain, {
     userId,
@@ -161,7 +161,9 @@ export const receiveMessage = async req => {
     integrationId: integration?.erxesApiId
   });
 
-  // debug.error(`after createOrUpdateCustomer: ${userId} ${JSON.stringify(customer)}`);
+  debug.error(
+    `after createOrUpdateCustomer: ${userId} ${JSON.stringify(customer)}`
+  );
 
   // debug.error(`data before createOrUpdateConversation: ${customer.erxesApiId}, ${JSON.stringify({
   //     integrationId: integration._id,
@@ -177,7 +179,7 @@ export const receiveMessage = async req => {
 
   await createOrUpdateConversation(models, subdomain, {
     integrationId: integration?._id,
-    userId: isOASend(data?.event_name) ? null : userId,
+    userId /* : isOASend(data?.event_name) ? null : userId */,
     oa_id,
     customerId: customer?.erxesApiId,
     integrationErxesApiId: integration?.erxesApiId,

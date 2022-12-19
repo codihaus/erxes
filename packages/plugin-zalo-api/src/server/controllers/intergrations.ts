@@ -61,8 +61,10 @@ export const zaloCreateIntegration = async (
         userId,
         firstName,
         integrationId,
-        avatar
+        profilePic: avatar
       });
+
+      console.log('integration createOrUpdateCustomer:', customer);
 
       await createOrUpdateConversation(models, subdomain, {
         integrationId: integration._id,
@@ -142,16 +144,16 @@ export const removeIntegration = async (
 
   const { _id, kind, accountId, erxesApiId } = integration;
 
-  const account = await models.Accounts.findOne({ _id: accountId });
+  // const account = await models.Accounts.findOne({ _id: accountId });
 
   const selector = { integrationId: _id };
 
   if (kind.includes('zalo')) {
     //   debugFacebook('Removing entries');
 
-    if (!account) {
-      throw new Error('Account not found');
-    }
+    // if (!account) {
+    //     throw new Error("Account not found");
+    // }
 
     //   for (const pageId of integration.oa_id || []) {
     // let pageTokenResponse;
@@ -176,18 +178,18 @@ export const removeIntegration = async (
     // }
     //   }
 
-    //   const conversationIds = await models.Conversations.find(selector).distinct(
-    //     '_id'
-    //   );
+    const conversationIds = await models.Conversations.find(selector).distinct(
+      '_id'
+    );
 
-    //   await models.Customers.deleteMany({
-    //     integrationId: integrationErxesApiId
-    //   });
+    await models.Customers.deleteMany({
+      integrationId: integrationErxesApiId
+    });
 
-    //   await models.Conversations.deleteMany(selector);
-    //   await models.ConversationMessages.deleteMany({
-    //     conversationId: { $in: conversationIds }
-    //   });
+    await models.Conversations.deleteMany(selector);
+    await models.ConversationMessages.deleteMany({
+      conversationId: { $in: conversationIds }
+    });
 
     await models.Integrations.deleteOne({ _id });
   }

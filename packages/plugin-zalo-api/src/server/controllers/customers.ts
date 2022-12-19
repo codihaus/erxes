@@ -12,7 +12,7 @@ export const createOrUpdateCustomer = async (
   const integrationId = data?.integrationId;
   const oa_id = data?.oa_id;
 
-  delete data.integrationId;
+  // delete data.integrationId;
   delete data.oa_id;
 
   let hasData = Object.keys(data).length > 1;
@@ -21,7 +21,7 @@ export const createOrUpdateCustomer = async (
     userId: data.userId
   });
 
-  // debug.error(`customer data: ${data.userID}`)
+  debug.error(`Customers.findOne: ${customer}`);
 
   if (customer) {
     return customer;
