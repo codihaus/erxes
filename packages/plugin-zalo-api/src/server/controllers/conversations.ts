@@ -36,41 +36,40 @@ export const createOrUpdateConversation = async (
           : e
       );
     }
+  }
+  // save on api
+  try {
+    const apiConversationResponse = await sendInboxMessage({
+      subdomain,
+      action: 'integrations.receive',
+      data: {
+        action: 'create-or-update-conversation',
+        payload: JSON.stringify({
+          customerId: data.customerId,
+          integrationId: data.integrationErxesApiId,
+          content: data?.message?.text,
+          conversationId: conversation.erxesApiId,
+          attachments: []
+          //     .filter((att) => att.type !== "fallback")
+          //     .map((att) => ({
+          //         type: att.type,
+          //         url: att.payload ? att.payload.url : "",
+          //     })),
+        })
+      },
+      isRPC: true
+    });
 
-    // save on api
-    try {
-      const apiConversationResponse = await sendInboxMessage({
-        subdomain,
-        action: 'integrations.receive',
-        data: {
-          action: 'create-or-update-conversation',
-          payload: JSON.stringify({
-            customerId: data.customerId,
-            integrationId: data.integrationErxesApiId,
-            content: data?.message?.text,
-            conversationId: conversation.erxesApiId
-            // attachments: (attachments || [])
-            //     .filter((att) => att.type !== "fallback")
-            //     .map((att) => ({
-            //         type: att.type,
-            //         url: att.payload ? att.payload.url : "",
-            //     })),
-          })
-        },
-        isRPC: true
-      });
+    conversation.erxesApiId = apiConversationResponse._id;
 
-      conversation.erxesApiId = apiConversationResponse._id;
+    console.log(`apiConversationResponse: ${apiConversationResponse}`);
 
-      console.log(`apiConversationResponse: ${apiConversationResponse}`);
-
-      await conversation.save();
-    } catch (e) {
-      await models.Conversations.deleteOne({
-        _id: conversation._id
-      });
-      throw new Error(e);
-    }
+    await conversation.save();
+  } catch (e) {
+    await models.Conversations.deleteOne({
+      _id: conversation._id
+    });
+    throw new Error(e);
   }
   await createConversationMessage(models, conversation, data);
 };
@@ -109,6 +108,8 @@ export const createConversationMessage = async (
         // userId: data?.userId || '',
         attachments: data.message.attachments
       });
+
+      console.log('models.ConversationMessages.create', created.toObject());
 
       graphqlPubsub.publish('conversationClientMessageInserted', {
         conversationClientMessageInserted: {

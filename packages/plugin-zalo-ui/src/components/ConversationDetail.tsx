@@ -165,47 +165,44 @@ class Detail extends React.Component<any> {
     let tempId;
 
     const getAttachmentProps = (attachment, key) => attachment?.payload?.[key];
+    console.log('messages:', messages);
 
     messages.forEach(message => {
-      message.attachments = message.attachments?.map((attachment: any) => {
-        // const {
-        //   thumbnail,
-        //   // url,
-        //   // title,
-        //   // description,
-        //   coordinates
-        // } = attachment?.payload
+      let parsedMessage = message;
+      parsedMessage.attachments = message.attachments
+        ?.map((attachment: any) => {
+          // const {
+          //   thumbnail,
+          //   // url,
+          //   // title,
+          //   // description,
+          //   coordinates
+          // } = attachment?.payload
 
-        const url = getAttachmentProps(attachment, 'url');
-        const title = getAttachmentProps(attachment, 'title');
-        const description = getAttachmentProps(attachment, 'description');
+          let type = attachment?.type || 'text';
+          const url = getAttachmentProps(attachment, 'url');
+          const title = getAttachmentProps(attachment, 'title');
+          const description = getAttachmentProps(attachment, 'description');
 
-        let type = 'text';
+          if (['voice'].includes(type)) {
+            type = 'audio';
+          }
+          if (['sticker', 'gif'].includes(type)) {
+            type = 'image';
+          }
 
-        if (['voice'].includes(attachment.type)) {
-          type = 'audio';
-        }
-        if (['sticker', 'gif'].includes(attachment.type)) {
-          type = 'image';
-        }
+          let output: any = {
+            type,
+            name: title || description
+          };
 
-        let output: any = {
-          type,
-          url,
-          name: title || description
-        };
-        // if( url ) output.url = url
-        // if( url ) output.url = url
-        // if( url ) output.url = url
-        return output;
-        // return {
-        //   url,
-        //   name,
-        //   type,
-        //   size,
-        // }
-      });
-      console.log('isStaff:', !message.userId, message);
+          console.log(type, url, attachment?.payload);
+
+          if (url) output.url = url;
+          return output;
+        })
+        .filter((attachment: any) => !['text'].includes(attachment.type));
+
       rows.push(
         <Message
           isSameUser={
@@ -213,9 +210,9 @@ class Detail extends React.Component<any> {
               ? message.userId === tempId
               : message.customerId === tempId
           }
-          message={message}
+          message={parsedMessage}
           key={message._id}
-          isStaff={!message.userId}
+          isStaff={message.userId}
         />
       );
 
@@ -237,26 +234,14 @@ class Detail extends React.Component<any> {
     }
 
     const messages = messagesQuery.zaloConversationMessages || [];
-
+    console.log(
+      'messagesQuery.zaloConversationMessages:',
+      messagesQuery.zaloConversationMessages
+    );
     return this.renderMessages(
       messagesQuery.zaloConversationMessages,
       messages[0]
     );
-
-    let rows: React.ReactNode[] = [];
-    console.log('messages', messages);
-    messages.forEach(message => {
-      console.log('message', message);
-      rows.push(
-        <SimpleMessage
-          message={message}
-          key={message._id}
-          isStaff={!message.userId}
-        />
-      );
-    });
-
-    return rows;
   }
 }
 
