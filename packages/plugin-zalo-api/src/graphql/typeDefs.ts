@@ -39,8 +39,14 @@ const types = `
   }
 
   type ZaloAttachments {
-    payload: ZaloAttachmentPayload
+    id: String
+    thumbnail: String
     type: String
+    url: String
+    name: String
+    description: String
+    duration: String
+    coordinates: JSON
   }
 
   type ZaloConversationMessage {

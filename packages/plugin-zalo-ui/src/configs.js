@@ -39,15 +39,13 @@ module.exports = {
   //             isCustomerRead
               
   //             attachments {
-  //               payload {
-  //                 id
-  //                 thumbnail
-  //                 url
-  //                 title
-  //                 description
-  //                 coordinates
-  //               }
+  //               thumbnail
   //               type
+  //               url
+  //               name
+  //               description
+  //               duration
+  //               coordinates
   //             }
 
   //             user {

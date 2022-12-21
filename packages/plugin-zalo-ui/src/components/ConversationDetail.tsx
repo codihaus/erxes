@@ -164,25 +164,17 @@ class Detail extends React.Component<any> {
 
     let tempId;
 
-    const getAttachmentProps = (attachment, key) => attachment?.payload?.[key];
     console.log('messages:', messages);
+
+    // return rows
 
     messages.forEach(message => {
       let parsedMessage = message;
       parsedMessage.attachments = message.attachments
         ?.map((attachment: any) => {
-          // const {
-          //   thumbnail,
-          //   // url,
-          //   // title,
-          //   // description,
-          //   coordinates
-          // } = attachment?.payload
-
           let type = attachment?.type || 'text';
-          const url = getAttachmentProps(attachment, 'url');
-          const title = getAttachmentProps(attachment, 'title');
-          const description = getAttachmentProps(attachment, 'description');
+          const url = attachment?.url;
+          const name = attachment?.name;
 
           if (['voice'].includes(type)) {
             type = 'audio';
@@ -193,12 +185,14 @@ class Detail extends React.Component<any> {
 
           let output: any = {
             type,
-            name: title || description
+            name
           };
 
-          console.log(type, url, attachment?.payload);
+          console.log(type, url, attachment);
 
-          if (url) output.url = url;
+          if (url) {
+            output.url = url;
+          }
           return output;
         })
         .filter((attachment: any) => !['text'].includes(attachment.type));
@@ -219,6 +213,8 @@ class Detail extends React.Component<any> {
       tempId = message.userId ? message.userId : message.customerId;
     });
 
+    console.log('rows:', rows.length);
+
     return rows;
   }
 
@@ -234,10 +230,7 @@ class Detail extends React.Component<any> {
     }
 
     const messages = messagesQuery.zaloConversationMessages || [];
-    console.log(
-      'messagesQuery.zaloConversationMessages:',
-      messagesQuery.zaloConversationMessages
-    );
+    console.log('messagesQuery.zaloConversationMessages:', messages.length);
     return this.renderMessages(
       messagesQuery.zaloConversationMessages,
       messages[0]

@@ -2,7 +2,12 @@ import { generateModels, IModels } from '../../models';
 import { sendInboxMessage } from '../brokers';
 import { debug, graphqlPubsub } from '../../configs';
 import { getSubdomain } from '@erxes/api-utils/src/core';
-import { getMessageOAID, getMessageUserID, isOASend } from '../../utils';
+import {
+  convertAttachment,
+  getMessageOAID,
+  getMessageUserID,
+  isOASend
+} from '../../utils';
 import { createOrUpdateCustomer } from './customers';
 
 export const createOrUpdateConversation = async (
@@ -186,6 +191,7 @@ export const receiveMessage = async req => {
     integrationErxesApiId: integration?.erxesApiId,
     message: {
       ...data.message,
+      attachments: convertAttachment(data?.message?.attachments),
       timestamp: new Date(+data.timestamp) || new Date()
     }
   });

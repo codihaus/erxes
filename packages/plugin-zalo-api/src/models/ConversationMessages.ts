@@ -44,8 +44,21 @@ export const attachmentPayloadSchema = new Schema(
 
 export const attachmentsSchema = new Schema(
   {
-    payload: attachmentPayloadSchema,
-    type: field({ type: String, optional: true }) // text, image, sticker, GIF, location, voice, link, links,
+    id: field({ type: String, optional: true }),
+    type: field({ type: String, optional: true }), // text, image, sticker, GIF, location, voice, link, links,
+    thumbnail: field({ type: String, optional: true }),
+    url: field({ type: String, optional: true }),
+    name: field({ type: String }),
+    description: field({ type: String, optional: true }),
+    size: field({ type: Number, optional: true }),
+    duration: field({ type: Number, optional: true }),
+    coordinates: new Schema(
+      {
+        latitude: field({ type: String, optional: true }),
+        longitude: field({ type: String, optional: true })
+      },
+      { _id: false }
+    )
   },
   { _id: false }
 );

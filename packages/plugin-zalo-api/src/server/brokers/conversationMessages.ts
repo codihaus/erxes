@@ -1,9 +1,12 @@
 import * as strip from 'strip';
+import axios from 'axios';
+import * as request from 'request-promise';
 import { generateModels } from '../../models';
 import { debug } from '../../configs';
 import { userIds } from '../middlewares/userMiddleware';
 import { createOrUpdateConversation } from '../controllers';
 import { zaloSend } from '../../zalo';
+import { generateAttachmentUrl } from '../../utils';
 
 export const conversationMessagesBroker = ({
   consumeRPCQueue,
@@ -34,7 +37,7 @@ export const conversationMessagesBroker = ({
 
       let response: any = null;
 
-      console.log(data);
+      console.log('data from response form:', data);
 
       try {
         if (type === 'zalo') {
@@ -51,6 +54,20 @@ export const conversationMessagesBroker = ({
           });
 
           const { recipientId, senderId } = conversation;
+          console.log('start generateAttachmentUrl: ');
+          for (const attachment of attachments) {
+            let attachmentUrl = generateAttachmentUrl(attachment.url);
+            // let file = await axios.get(attachmentUrl)
+            let file = await request
+              .get({ url: 'http://localhost:3000' + attachmentUrl })
+              .then(res => res);
+            console.log('generateAttachmentUrl: ', attachmentUrl);
+            console.log('file generateAttachmentUrl: ', file);
+          }
+          response.status = 'success';
+          return;
+
+          // const uploadImage = await zaloSend('upload/image', )
 
           const messageSent = await zaloSend(
             'message',

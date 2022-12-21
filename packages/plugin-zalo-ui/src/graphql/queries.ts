@@ -52,15 +52,14 @@ const zaloConversationMessages = `
       createdAt
       isCustomerRead
       attachments {
-        payload {
-          id
-          thumbnail
-          url
-          title
-          description
-          coordinates
-        }
+        id
+        thumbnail
         type
+        url
+        name
+        description
+        duration
+        coordinates
       }
       user {
         _id

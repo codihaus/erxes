@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import * as requestify from 'requestify';
 import { debugExternalApi } from '@erxes/api-utils/src/debuggers';
 import { IRequestParams } from '@erxes/api-utils/src/requests';
+import { getEnv } from '@erxes/api-utils/src';
 
 dotenv.config();
 
@@ -42,6 +43,16 @@ export const sendRequest = async (
       throw new Error(message);
     }
   }
+};
+
+export const generateAttachmentUrl = (urlOrName: string) => {
+  const DOMAIN = getEnv({ name: 'DOMAIN' });
+
+  if (urlOrName.startsWith('http')) {
+    return urlOrName;
+  }
+
+  return `${DOMAIN}/gateway/pl:core/read-file?key=${urlOrName}`;
 };
 
 export const isOASend = (eventName: string = '') => {
@@ -90,4 +101,36 @@ export const getMessageUserID = ({
   sender
 }: ZaloMessage) => {
   return isOASend(event_name) ? recipient.id : sender.id;
+};
+
+export const convertAttachment = (attachments: any) => {
+  return attachments?.map((attachment: any) => {
+    let outputAttachment = {};
+
+    let name = attachment?.payload?.title || attachment?.payload?.description;
+
+    delete attachment.payload.title;
+
+    let type = attachment.type;
+    let url = attachment?.url;
+
+    if (['voice'].includes(type)) {
+      type = 'audio';
+    }
+    if (['sticker', 'gif', 'location'].includes(type)) {
+      type = 'image';
+    }
+
+    // if( attachment?.payload?.coordinates ) {
+    //     outputAttachment.url = `https://maps.google.com/maps?ll=${},${}&z=14&output=embed`
+    // }
+
+    outputAttachment = {
+      type,
+      name,
+      ...attachment?.payload
+    };
+
+    return outputAttachment;
+  });
 };

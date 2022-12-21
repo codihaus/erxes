@@ -78,12 +78,10 @@ export const zaloCreateIntegration = async (
           msg_id: message_id,
           attachments: [
             {
-              payload: {
-                id: '',
-                thumbnail: thumb,
-                url,
-                coordinates: location
-              },
+              id: '',
+              thumbnail: thumb,
+              url,
+              coordinates: location,
               type // text, image, sticker, GIF, location, voice, link, links,
             }
           ]
