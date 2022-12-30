@@ -67,7 +67,7 @@ export const createOrUpdateConversation = async (
 
     conversation.erxesApiId = apiConversationResponse._id;
 
-    console.log(`apiConversationResponse: ${apiConversationResponse}`);
+    // console.log(`apiConversationResponse: ${apiConversationResponse}`);
 
     await conversation.save();
   } catch (e) {
@@ -148,7 +148,7 @@ export const receiveMessage = async req => {
   const oa_id = getMessageOAID(data);
   const userId = getMessageUserID(data);
 
-  debug.error(JSON.stringify(data));
+  debug.error('Receive From Zalo:', JSON.stringify(data));
 
   const integration = await models.Integrations.getIntegration({
     $and: [{ oa_id: { $in: oa_id } }, { kind: 'zalo' }]
@@ -159,7 +159,7 @@ export const receiveMessage = async req => {
     return;
   }
 
-  debug.error(`integration: ${JSON.stringify(integration)}`);
+  // debug.error(`integration: ${JSON.stringify(integration)}`);
 
   const customer = await createOrUpdateCustomer(models, subdomain, {
     userId,
@@ -167,9 +167,9 @@ export const receiveMessage = async req => {
     integrationId: integration?.erxesApiId
   });
 
-  debug.error(
-    `after createOrUpdateCustomer: ${userId} ${JSON.stringify(customer)}`
-  );
+  // debug.error(
+  //   `after createOrUpdateCustomer: ${userId} ${JSON.stringify(customer)}`
+  // );
 
   // debug.error(`data before createOrUpdateConversation: ${customer.erxesApiId}, ${JSON.stringify({
   //     integrationId: integration._id,

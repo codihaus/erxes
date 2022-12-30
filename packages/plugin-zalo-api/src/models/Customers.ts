@@ -11,6 +11,7 @@ export interface ICustomer {
   lastName: string;
   profilePic: string;
   integrationId: string;
+  isFollower: boolean;
 }
 
 export interface ICustomerDocument extends ICustomer, Document {}
@@ -22,7 +23,8 @@ export const customerSchema = new Schema({
   firstName: String,
   lastName: String,
   profilePic: String,
-  integrationId: String
+  integrationId: String,
+  isFollower: Boolean
 });
 
 export interface ICustomerModel extends Model<ICustomerDocument> {

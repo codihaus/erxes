@@ -57,13 +57,18 @@ export const conversationMessagesBroker = ({
           console.log('start generateAttachmentUrl: ');
           for (const attachment of attachments) {
             let attachmentUrl = generateAttachmentUrl(attachment.url);
+            console.log('generateAttachmentUrl: ', attachmentUrl);
             // let file = await axios.get(attachmentUrl)
             let file = await request
-              .get({ url: 'http://localhost:3000' + attachmentUrl })
+              .get({ url: attachmentUrl })
               .then(res => res);
-            console.log('generateAttachmentUrl: ', attachmentUrl);
             console.log('file generateAttachmentUrl: ', file);
           }
+          const attachmentPromises = attachments.map(async attachment => {
+            let attachmentUrl = generateAttachmentUrl(attachment.url);
+            return await request.get({ url: attachmentUrl }).then(res => res);
+          });
+          const messageAttachments = await Promise.all(attachmentPromises);
           response.status = 'success';
           return;
 

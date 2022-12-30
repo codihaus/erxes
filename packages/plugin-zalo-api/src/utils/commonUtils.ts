@@ -46,13 +46,18 @@ export const sendRequest = async (
 };
 
 export const generateAttachmentUrl = (urlOrName: string) => {
-  const DOMAIN = getEnv({ name: 'DOMAIN' });
+  const DOMAIN = getEnv({
+    name: 'DOMAIN',
+    defaultValue: 'http://localhost:4000'
+  });
+
+  // console.log('DOMAIN from generateAttachmentUrl', process.env)
 
   if (urlOrName.startsWith('http')) {
     return urlOrName;
   }
 
-  return `${DOMAIN}/gateway/pl:core/read-file?key=${urlOrName}`;
+  return `${DOMAIN}/read-file?key=${urlOrName}`;
 };
 
 export const isOASend = (eventName: string = '') => {

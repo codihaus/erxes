@@ -11,9 +11,11 @@ export const createOrUpdateCustomer = async (
 ) => {
   const integrationId = data?.integrationId;
   const oa_id = data?.oa_id;
+  const checkFollower = data?.checkFollower;
 
   // delete data.integrationId;
   delete data.oa_id;
+  delete data.checkFollower;
 
   let hasData = Object.keys(data).length > 1;
 
@@ -23,11 +25,12 @@ export const createOrUpdateCustomer = async (
 
   debug.error(`Customers.findOne: ${customer}`);
 
-  if (customer) {
-    return customer;
-  }
-
   if (oa_id) {
+    const mayBeFollower =
+      checkFollower && !customer?.isFollower
+        ? await isFollowedUser(data.userId, { models, oa_id })
+        : false;
+
     const zaloUser: any = await zaloGet(
       `conversation?data=${JSON.stringify({
         user_id: data.userId,
@@ -55,10 +58,15 @@ export const createOrUpdateCustomer = async (
       ...data,
       firstName: firstName,
       integrationId,
-      profilePic: avatar
+      profilePic: avatar,
+      isFollower: mayBeFollower
     };
     // debug.error(`zaloUser: ${JSON.stringify(zaloUser)}`)
     // debug.error(`zaloUser data: ${JSON.stringify(data)}`)
+  }
+
+  if (customer) {
+    return customer;
   }
 
   try {
@@ -89,15 +97,22 @@ export const createOrUpdateCustomer = async (
       isRPC: true
     });
 
-    debug.error(`apiCustomerResponse: ${JSON.stringify(apiCustomerResponse)}`);
+    // debug.error(`apiCustomerResponse: ${JSON.stringify(apiCustomerResponse)}`);
 
     customer.erxesApiId = apiCustomerResponse._id;
     await customer.save();
   } catch (e) {
     // await models.Customers.deleteOne({ _id: customer._id });
-
-    debug.error(`apiCustomerResponse error: ${e.message}`);
+    // debug.error(`apiCustomerResponse error: ${e.message}`);
   }
 
   return customer;
+};
+
+const isFollowedUser = async (user_id, config) => {
+  const mayBeFollower = await zaloGet(
+    `getprofile?data=${JSON.stringify({ user_id })}`,
+    config
+  );
+  return mayBeFollower.error === 0;
 };

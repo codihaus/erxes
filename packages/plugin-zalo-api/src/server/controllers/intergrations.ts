@@ -59,9 +59,11 @@ export const zaloCreateIntegration = async (
 
       const customer = await createOrUpdateCustomer(models, subdomain, {
         userId,
+        oa_id,
         firstName,
         integrationId,
-        profilePic: avatar
+        profilePic: avatar,
+        checkFollower: true
       });
 
       console.log('integration createOrUpdateCustomer:', customer);
