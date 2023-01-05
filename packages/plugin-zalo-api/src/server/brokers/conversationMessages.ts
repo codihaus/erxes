@@ -4,7 +4,11 @@ import * as request from 'request-promise';
 import { generateModels } from '../../models';
 import { debug } from '../../configs';
 import { userIds } from '../middlewares/userMiddleware';
-import { createOrUpdateConversation } from '../controllers';
+import {
+  createOrUpdateConversation,
+  createOrUpdateCustomer,
+  isFollowedUser
+} from '../controllers';
 import { zaloSend } from '../../zalo';
 import { generateAttachmentUrl } from '../../utils';
 
@@ -39,71 +43,131 @@ export const conversationMessagesBroker = ({
 
       console.log('data from response form:', data);
 
+      if (type !== 'zalo') {
+        return {
+          status: 'success',
+          errorMessage: 'Wrong kind'
+        };
+      }
       try {
-        if (type === 'zalo') {
-          const {
-            integrationId,
-            conversationId,
-            content = '',
-            attachments = [],
-            extraInfo
-          } = doc;
+        const {
+          integrationId,
+          conversationId,
+          content = '',
+          attachments = [],
+          extraInfo
+        } = doc;
 
-          const conversation = await models.Conversations.getConversation({
-            erxesApiId: conversationId
-          });
+        const conversation = await models.Conversations.getConversation({
+          erxesApiId: conversationId
+        });
 
-          const { recipientId, senderId } = conversation;
-          console.log('start generateAttachmentUrl: ');
-          for (const attachment of attachments) {
-            let attachmentUrl = generateAttachmentUrl(attachment.url);
-            console.log('generateAttachmentUrl: ', attachmentUrl);
-            // let file = await axios.get(attachmentUrl)
-            let file = await request
-              .get({ url: attachmentUrl })
-              .then(res => res);
-            console.log('file generateAttachmentUrl: ', file);
-          }
-          const attachmentPromises = attachments.map(async attachment => {
-            let attachmentUrl = generateAttachmentUrl(attachment.url);
-            return await request.get({ url: attachmentUrl }).then(res => res);
-          });
-          const messageAttachments = await Promise.all(attachmentPromises);
-          response.status = 'success';
-          return;
+        const { recipientId, senderId } = conversation;
 
-          // const uploadImage = await zaloSend('upload/image', )
+        const conversationMessage = await models.ConversationMessages.findOne({
+          conversationId: conversation?._id
+        });
 
-          const messageSent = await zaloSend(
-            'message',
-            {
-              recipient: {
-                user_id: senderId
-              },
-              message: {
-                text: strip(content)
+        console.log('on try: ');
+
+        let recipient: { [key: string]: any } = {
+          message_id: conversationMessage?.mid
+        };
+        let message: { [key: string]: any } = {
+          text: strip(content)
+        };
+
+        // check if user isFollower
+        // const isFollower = await isFollowedUser(senderId, { models, oa_id: recipientId })
+        // console.log('isFollower', isFollower);
+
+        // if( isFollower ) {
+        //     recipient = {
+        //         user_id: senderId,
+        //     }
+        // } else {
+
+        //     recipient = {
+        //         message_id: conversationMessage?.mid
+        //     }
+        // }
+
+        if (attachments?.length) {
+          console.log('attachments: ', attachments?.[0]);
+
+          let element = attachments?.[0];
+          let type = element.type?.startsWith('image') ? 'template' : 'file';
+          let template_type = element.type?.startsWith('image')
+            ? 'media'
+            : 'file';
+          message = {
+            text: strip(content),
+            attachment: {
+              type,
+              payload: {
+                template_type
               }
-            },
-            { models, oa_id: recipientId }
-          );
-
-          console.log('messageSent', messageSent);
-
-          const localMessage = await models.ConversationMessages.addMessage(
-            {
-              ...doc,
-              content: strip(content),
-              // inbox conv id comes, so override
-              conversationId: conversation._id,
-              mid: messageSent?.data?.message_id
-            },
-            doc.userId
-          );
-
-          response = {
-            data: localMessage.toObject()
+            }
           };
+
+          let attachmentUrl = generateAttachmentUrl(element.url);
+          let file = await axios
+            .get(attachmentUrl, { responseType: 'stream' })
+            .then(res => res.data);
+
+          let uploadedFile = await zaloSend(
+            'upload/image',
+            { file },
+            {
+              models,
+              oa_id: recipientId,
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
+
+          console.log('uploadedFile', uploadedFile);
+
+          if (template_type === 'media' && uploadedFile?.error === 0) {
+            message.attachment.payload.elements = [
+              {
+                media_type: 'image',
+                ...uploadedFile?.data
+              }
+            ];
+          }
         }
+
+        console.log('start messageSent:');
+
+        const messageSent = await zaloSend(
+          'message',
+          {
+            recipient,
+            message
+          },
+          { models, oa_id: recipientId }
+        );
+
+        console.log('recipient', recipient);
+        console.log('message', message);
+        console.log('messageSent', messageSent);
+
+        const localMessage = await models.ConversationMessages.addMessage(
+          {
+            ...doc,
+            content: strip(content),
+            // inbox conv id comes, so override
+            conversationId: conversation._id,
+            mid: messageSent?.data?.message_id
+          },
+          doc.userId
+        );
+
+        response = {
+          data: localMessage.toObject()
+        };
 
         response.status = 'success';
       } catch (e) {

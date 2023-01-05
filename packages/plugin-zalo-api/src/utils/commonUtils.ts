@@ -108,16 +108,25 @@ export const getMessageUserID = ({
   return isOASend(event_name) ? recipient.id : sender.id;
 };
 
-export const convertAttachment = (attachments: any) => {
+export const convertAttachment = (attachments: any = []) => {
+  console.log(attachments);
   return attachments?.map((attachment: any) => {
-    let outputAttachment = {};
+    let outputAttachment: { [key: string]: any } = {};
 
     let name = attachment?.payload?.title || attachment?.payload?.description;
 
-    delete attachment.payload.title;
+    delete attachment?.payload?.title;
 
     let type = attachment.type;
     let url = attachment?.url;
+
+    // if( attachment?.payload?.coordinates ) {
+    //     outputAttachment.url = `https://maps.google.com/maps?ll=${},${}&z=14&output=embed`
+    // }
+
+    outputAttachment = {
+      ...attachment?.payload
+    };
 
     if (['voice'].includes(type)) {
       type = 'audio';
@@ -126,15 +135,9 @@ export const convertAttachment = (attachments: any) => {
       type = 'image';
     }
 
-    // if( attachment?.payload?.coordinates ) {
-    //     outputAttachment.url = `https://maps.google.com/maps?ll=${},${}&z=14&output=embed`
-    // }
+    if (!['text'].includes(type)) outputAttachment.type = type;
 
-    outputAttachment = {
-      type,
-      name,
-      ...attachment?.payload
-    };
+    if (name) outputAttachment.name = name;
 
     return outputAttachment;
   });

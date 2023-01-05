@@ -1,8 +1,9 @@
 import { debug } from '../../configs';
 import { IModels } from '../../models';
+import { convertAttachment } from '../../utils';
 import { zaloGet } from '../../zalo';
 import { createOrUpdateConversation } from './conversations';
-import { createOrUpdateCustomer } from './customers';
+import { createOrUpdateCustomer, isFollowedUser } from './customers';
 const querystring = require('querystring');
 
 export const zaloCreateIntegration = async (
@@ -30,6 +31,7 @@ export const zaloCreateIntegration = async (
     `listrecentchat?data={"offset":0,"count":10}`,
     { models, oa_id }
   );
+  // 1. This request does not return conversation_id per message
 
   debug.error(`recentMessages: ${querystring.stringify(recentMessages)}`);
 
@@ -66,7 +68,22 @@ export const zaloCreateIntegration = async (
         checkFollower: true
       });
 
+      // Check if user is follower first.
+      // The conversation with anonymous user need the conversation_id.
+      // Unless we can not send the message to this kind of user
+
+      // So we don't need to create a conversation.
+      // if( ! customer.isFollower ) return
+
       console.log('integration createOrUpdateCustomer:', customer);
+
+      let attachment: { [key: string]: any } = {
+        type // text, image, sticker, GIF, location, voice, link, links,
+      };
+
+      if (thumb) attachment.thumbnail = thumb;
+      if (url) attachment.url = url;
+      if (location) attachment.coordinates = location;
 
       await createOrUpdateConversation(models, subdomain, {
         integrationId: integration._id,
@@ -78,15 +95,7 @@ export const zaloCreateIntegration = async (
           timestamp: time,
           text: message,
           msg_id: message_id,
-          attachments: [
-            {
-              id: '',
-              thumbnail: thumb,
-              url,
-              coordinates: location,
-              type // text, image, sticker, GIF, location, voice, link, links,
-            }
-          ]
+          attachments: convertAttachment([attachment])
         }
       });
     });

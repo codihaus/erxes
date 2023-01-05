@@ -26,10 +26,14 @@ export const createOrUpdateCustomer = async (
   debug.error(`Customers.findOne: ${customer}`);
 
   if (oa_id) {
+    // console.log('Check isFollowedUser', checkFollower, !customer?.isFollower)
+
     const mayBeFollower =
       checkFollower && !customer?.isFollower
         ? await isFollowedUser(data.userId, { models, oa_id })
         : false;
+
+    // console.log('mayBeFollower', mayBeFollower)
 
     const zaloUser: any = await zaloGet(
       `conversation?data=${JSON.stringify({
@@ -66,6 +70,8 @@ export const createOrUpdateCustomer = async (
   }
 
   if (customer) {
+    customer.isFollower = data.isFollower;
+    customer.save();
     return customer;
   }
 
@@ -109,10 +115,11 @@ export const createOrUpdateCustomer = async (
   return customer;
 };
 
-const isFollowedUser = async (user_id, config) => {
+export const isFollowedUser = async (user_id, config) => {
   const mayBeFollower = await zaloGet(
     `getprofile?data=${JSON.stringify({ user_id })}`,
     config
   );
+  // console.log(mayBeFollower)
   return mayBeFollower.error === 0;
 };

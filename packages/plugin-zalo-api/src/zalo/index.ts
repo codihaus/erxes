@@ -4,6 +4,7 @@ import { createOrUpdateAccount } from '../server/controllers';
 const querystring = require('querystring');
 import { debug } from '../configs';
 import { getConfig } from '../server';
+import { extend } from 'lodash';
 
 const OAAPIUrl = 'https://openapi.zalo.me/v2.0/oa/';
 const OAAuthAPIUrl = 'https://oauth.zaloapp.com/v4/oa/access_token';
@@ -174,11 +175,10 @@ export const getRequestConfigs = (config, access_token) => {
     ...config,
     headers: {
       'Content-Type': 'application/json',
+      ...config?.headers,
       access_token
     }
   };
-  if (config?.headers)
-    output.headers = { ...output.headers, ...config.headers };
 
   return output;
 };
@@ -204,6 +204,7 @@ export const zaloSend = async (
   const access_token =
     config?.access_token ||
     (await zaloGetAccessToken(config?.models, config?.oa_id));
+
   return await axios
     .post(`${OAAPIUrl}${path}`, data, getRequestConfigs(config, access_token))
     .then((res: any) => res.data)

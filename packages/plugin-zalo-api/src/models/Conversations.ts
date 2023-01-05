@@ -10,6 +10,8 @@ export interface IConversation {
   recipientId: string;
   content: string;
   integrationId: string;
+  conversationId: string;
+  zaloConversationId: string;
 }
 
 export interface IConversationDocument extends IConversation, Document {}
@@ -21,7 +23,9 @@ export const conversationSchema = new Schema({
   senderId: { type: String, index: true },
   recipientId: { type: String, index: true },
   integrationId: String,
-  content: String
+  content: String,
+  conversationId: String,
+  zaloConversationId: String
 });
 
 conversationSchema.index({ senderId: 1, recipientId: 1 }, { unique: true });

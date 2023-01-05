@@ -27,13 +27,17 @@ export const createOrUpdateConversation = async (
   if (!conversation) {
     // save on db
     try {
-      conversation = await models.Conversations.create({
+      let documentData: { [key: string]: any } = {
         timestamp: data.timestamp,
         senderId: data.userId,
         recipientId: data.oa_id,
         content: data?.message?.text,
         integrationId: data.integrationId
-      });
+      };
+      if (data?.message?.conversation_id) {
+        documentData.zaloConversationId = data?.message?.conversation_id;
+      }
+      conversation = await models.Conversations.create(documentData);
     } catch (e) {
       throw new Error(
         e.message.includes('duplicate')
@@ -145,10 +149,10 @@ export const receiveMessage = async req => {
 
   const data = req.body;
 
+  debug.error('Receive From Zalo:', JSON.stringify(data));
+
   const oa_id = getMessageOAID(data);
   const userId = getMessageUserID(data);
-
-  debug.error('Receive From Zalo:', JSON.stringify(data));
 
   const integration = await models.Integrations.getIntegration({
     $and: [{ oa_id: { $in: oa_id } }, { kind: 'zalo' }]
@@ -164,7 +168,8 @@ export const receiveMessage = async req => {
   const customer = await createOrUpdateCustomer(models, subdomain, {
     userId,
     oa_id,
-    integrationId: integration?.erxesApiId
+    integrationId: integration?.erxesApiId,
+    checkFollower: true
   });
 
   // debug.error(
